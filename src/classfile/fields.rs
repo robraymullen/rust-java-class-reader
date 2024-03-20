@@ -31,6 +31,7 @@ pub fn generate_fields(constant_pool: &Vec<Option<Constant>>, reader: &mut BufRe
         println!("constant name for field: {:?}", constant_name);
         let descriptor_index: u16 = reader.read_u16::<BigEndian>().unwrap();
         let attributes_count: u16 = reader.read_u16::<BigEndian>().unwrap();
+        println!("Generating attributes for field, count is: {attributes_count}");
         let attributes: Vec<AttributeType> = generate_attributes(attributes_count, constant_pool, reader);
         let field_info: FieldInfo = FieldInfo{access_flags, name_index, descriptor_index, attributes_count, attributes};
         fields.push(field_info);   
