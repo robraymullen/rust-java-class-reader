@@ -10,6 +10,7 @@ pub fn generate_constant_pool(reader: &mut BufReader<File>, constant_pool_size: 
 
     println!("constant pool size: {:?}, given size: {:?}", constant_pool.len(), constant_pool_size + 1);
     for index in 1..constant_pool_size {
+
         let tag: u8 = reader.read_u8().unwrap();
 
         match tag {
