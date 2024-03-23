@@ -12,10 +12,11 @@ pub fn generate_attributes(attribute_count: u16, constant_pool: &Vec<Option<Cons
         
         let attribute_name_index: usize = reader.read_u16::<BigEndian>().unwrap().into();
         let attribute_length: u32 = reader.read_u32::<BigEndian>().unwrap();
-        let attribute_constant_entry = constant_pool.get(attribute_name_index).unwrap().as_ref().unwrap();
+        let attribute_constant_entry = constant_pool.get(attribute_name_index-1).unwrap().as_ref().unwrap();
         println!("attribute_index: {attribute_index}, attribute length: {:?}, attribute_count: {:?}", attribute_length, attribute_count);
-        if attribute_length > 0 {
-            println!("attribute_constant_entry: {:?}", attribute_constant_entry);
+        println!("attribute_constant_entry: {:?}", attribute_constant_entry);
+        // if attribute_length > 0 {
+            // println!("attribute_constant_entry: {:?}", attribute_constant_entry);
             match attribute_constant_entry {
                 Constant::Utf8Info(utf8_constant) => {
                     let attribute_name_index: u16 = attribute_name_index as u16;
@@ -30,6 +31,33 @@ pub fn generate_attributes(attribute_count: u16, constant_pool: &Vec<Option<Cons
                         CODE_STR => {
                             println!("attribute index: {:?}", attribute_index);
                             println!("match code attribute");
+                            let max_stack: u16 = reader.read_u16::<BigEndian>().unwrap();
+                            let max_locals: u16 = reader.read_u16::<BigEndian>().unwrap();
+                            let code_length: u32 = reader.read_u32::<BigEndian>().unwrap();
+
+                            let mut code: Vec<u8> = vec![];
+                            // let mut bytes: Vec<u8> = vec![];
+                            for _ in 0..code_length {
+                                code.push(reader.read_u8().unwrap());
+                            }
+                            println!("code attribute inner code: {:?}", code);
+                            // let utf_str: String = str::from_utf8(&code).unwrap().into();
+
+                            let exception_table_length: u16 = reader.read_u16::<BigEndian>().unwrap();
+                            let mut exception_table: Vec<ExceptionTableEntry> = vec![];
+                            for _ in 0..exception_table_length {
+                                let start_pc: u16 = reader.read_u16::<BigEndian>().unwrap();
+                                let end_pc: u16 = reader.read_u16::<BigEndian>().unwrap();
+                                let handler_pc: u16 = reader.read_u16::<BigEndian>().unwrap();
+                                let catch_type: u16 = reader.read_u16::<BigEndian>().unwrap();
+                                let exception: ExceptionTableEntry = ExceptionTableEntry{start_pc, end_pc, handler_pc, catch_type};
+                                exception_table.push(exception);
+                            }
+                            let attributes_count: u16 = reader.read_u16::<BigEndian>().unwrap();
+                            let attribute_info = generate_attributes(attribute_count, constant_pool, reader);
+                            let code = AttributeCode{attribute_name_index, attribute_length, max_stack, max_locals, code_length, code, exception_table_length, exception_table, attributes_count, attribute_info};
+                            attributes.push(AttributeType::Code(code));
+
                         },
                         STACKMAPTABLE_STR => {
                             println!("attribute index: {:?}", attribute_index);
@@ -101,68 +129,76 @@ pub fn generate_attributes(attribute_count: u16, constant_pool: &Vec<Option<Cons
                         RUNTIMEVISIBLEANNOTATIONS_STR => {
                             println!("attribute index: {:?}", attribute_index);
                             let name = constant_pool.get(attribute_index as usize).unwrap().as_ref().unwrap();
-            
-                            println!("name at the attribute index {attribute_index} is: {:?}", name);
+                            
+                            if attribute_length > 0 {
 
-                            // let attribute_length: u32 = reader.read_u32::<BigEndian>().unwrap();
-                            let num_annotations: u16 = reader.read_u16::<BigEndian>().unwrap();
-                            let mut annotations: Vec<Annotation> = vec![];
-                            for _ in 0..num_annotations {
-                                let type_index: u16 = reader.read_u16::<BigEndian>().unwrap();
-                                let num_element_value_pairs: u16 = reader.read_u16::<BigEndian>().unwrap();
-                                
-                                let mut element_value_pairs: Vec<ElementValuePair> = vec![];
-                                println!("num_element_value_pairs: {num_element_value_pairs}");
-                                for _ in 0..num_element_value_pairs {
-                                    let element_name_index: u16 = reader.read_u16::<BigEndian>().unwrap();
-                                    let name = constant_pool.get(element_name_index as usize).unwrap().as_ref().unwrap();
-                                    println!("name at element_name_index: {element_name_index}, is: {:?}", name);
-                                    let tag: u8 = reader.read_u8().unwrap();
-                                    println!("tag found: {:?}", tag);
-                                    let tag_char = tag as char;
+                                println!("name at the attribute index {attribute_index} is: {:?}", name);
 
-                                    let value: ElementValue;
+                                // let attribute_length: u32 = reader.read_u32::<BigEndian>().unwrap();
+                                let num_annotations: u16 = reader.read_u16::<BigEndian>().unwrap();
+                                let mut annotations: Vec<Annotation> = vec![];
+                                for _ in 0..num_annotations {
+                                    let type_index: u16 = reader.read_u16::<BigEndian>().unwrap();
+                                    let num_element_value_pairs: u16 = reader.read_u16::<BigEndian>().unwrap();
+                                    
+                                    let mut element_value_pairs: Vec<ElementValuePair> = vec![];
+                                    println!("num_element_value_pairs: {num_element_value_pairs}");
+                                    for _ in 0..num_element_value_pairs {
+                                        let element_name_index: u16 = reader.read_u16::<BigEndian>().unwrap();
+                                        let name = constant_pool.get(element_name_index as usize).unwrap().as_ref().unwrap();
+                                        println!("name at element_name_index: {element_name_index}, is: {:?}", name);
+                                        let tag: u8 = reader.read_u8().unwrap();
+                                        println!("tag found: {:?}", tag);
+                                        let tag_char = tag as char;
 
-                                    match tag_char {
-                                        's'|'B'|'C'|'D'|'F'|'I'|'J'|'S'|'Z' => {
-                                            let const_value_index: u16 = reader.read_u16::<BigEndian>().unwrap();
-                                            let constant_value: ConstValueElement = ConstValueElement{const_value_index};
-                                            value = ElementValue{tag, value: ElementValueEnum::ConstantValueIndex(constant_value)};
-                                        },
-                                        'e' => {
-                                            let type_name_index: u16 = reader.read_u16::<BigEndian>().unwrap();
-                                            let const_name_index: u16 = reader.read_u16::<BigEndian>().unwrap();
-                                            let enum_const_value: EnumConstValueElement = EnumConstValueElement{type_name_index, const_name_index};
-                                            value = ElementValue{tag, value: ElementValueEnum::EnumConstValue(enum_const_value)};
-                                        },
-                                        'c' => {
-                                            let class_info_index: u16 = reader.read_u16::<BigEndian>().unwrap();
-                                            let class_const = ClassInfoIndexElement{class_info_index};
-                                            value = ElementValue{tag, value: ElementValueEnum::ClassInfoIndex(class_const)};
-                                        },
-                                        '@' => {
-                                            panic!("@ tag found for annotation");
-                                        },
-                                        '[' => {
-                                            panic!("[ value found for annotation");
-                                        },
-                                        _ => {
-                                            // println!("constant pool is: {:?}", constant_pool);
-                                            panic!("No valid tag value found for annotation: {:?}, num of annotations: {:?}, num of value pairs: {:?}", tag, num_annotations, num_element_value_pairs);
+                                        let value: ElementValue;
+
+                                        match tag_char {
+                                            's'|'B'|'C'|'D'|'F'|'I'|'J'|'S'|'Z' => {
+                                                let const_value_index: u16 = reader.read_u16::<BigEndian>().unwrap();
+                                                let constant_value: ConstValueElement = ConstValueElement{const_value_index};
+                                                value = ElementValue{tag, value: ElementValueEnum::ConstantValueIndex(constant_value)};
+                                            },
+                                            'e' => {
+                                                let type_name_index: u16 = reader.read_u16::<BigEndian>().unwrap();
+                                                let const_name_index: u16 = reader.read_u16::<BigEndian>().unwrap();
+                                                let enum_const_value: EnumConstValueElement = EnumConstValueElement{type_name_index, const_name_index};
+                                                value = ElementValue{tag, value: ElementValueEnum::EnumConstValue(enum_const_value)};
+                                            },
+                                            'c' => {
+                                                let class_info_index: u16 = reader.read_u16::<BigEndian>().unwrap();
+                                                let class_const = ClassInfoIndexElement{class_info_index};
+                                                value = ElementValue{tag, value: ElementValueEnum::ClassInfoIndex(class_const)};
+                                            },
+                                            '@' => {
+                                                panic!("@ tag found for annotation");
+                                            },
+                                            '[' => {
+                                                panic!("[ value found for annotation");
+                                            },
+                                            _ => {
+                                                // println!("constant pool is: {:?}", constant_pool);
+                                                panic!("No valid tag value found for annotation: {:?}, num of annotations: {:?}, num of value pairs: {:?}", tag, num_annotations, num_element_value_pairs);
+                                            }
                                         }
-                                    }
 
-                                    let element_value_pair: ElementValuePair = ElementValuePair{element_name_index, value};
-                                    element_value_pairs.push(element_value_pair);
+                                        let element_value_pair: ElementValuePair = ElementValuePair{element_name_index, value};
+                                        element_value_pairs.push(element_value_pair);
+                                    }
+                                    let annotation: Annotation = Annotation{type_index, num_element_value_pairs, element_value_pairs};
+                                    annotations.push(annotation);
                                 }
-                                let annotation: Annotation = Annotation{type_index, num_element_value_pairs, element_value_pairs};
-                                annotations.push(annotation);
+                                let runtime_visible_annotation: AttributeRuntimeVisibleAnnotations = AttributeRuntimeVisibleAnnotations{attribute_name_index, attribute_length, num_annotations, annotations};
+                                attributes.push(AttributeType::RuntimeVisibleAnnotations(runtime_visible_annotation));
                             }
-                            let runtime_visible_annotation: AttributeRuntimeVisibleAnnotations = AttributeRuntimeVisibleAnnotations{attribute_name_index, attribute_length, num_annotations, annotations};
+                            let runtime_visible_annotation: AttributeRuntimeVisibleAnnotations = AttributeRuntimeVisibleAnnotations{attribute_name_index, attribute_length, num_annotations: 0, annotations: vec![]};
+                            attributes.push(AttributeType::RuntimeVisibleAnnotations(runtime_visible_annotation));
                         },
                         _ => {
-                            println!("about to panic. attribute name was: {:?}", utf8_constant.utf_str.as_str());
-                            panic!("No valid attribute found");
+                            println!("about to panic. attribute name was: {:?}, attribute_length is: {attribute_length}", utf8_constant.utf_str.as_str());
+                            // panic!("No valid attribute found");
+                            let mut buffer = vec![0u8; attribute_length as usize];
+                            reader.read_exact(&mut buffer);
                         }
                     }
                     
@@ -171,7 +207,7 @@ pub fn generate_attributes(attribute_count: u16, constant_pool: &Vec<Option<Cons
                     panic!("No valid utf8 string entry found for attribute_name_index: {}", attribute_name_index);
                 }
             }
-        }
+        // }
     }
 
     attributes
@@ -190,13 +226,14 @@ const SOURCEDEBUGEXTENSION_STR: &str = "SourceDebugExtension";
 const LINENUMBERTABLE_STR: &str = "LineNumberTable";
 const LOCALVARIABLETABLE_STR: &str = "LocalVariableTable";
 const LOCALVARIABLETYPETABLE_STR: &str = "LocalVariableTypeTable";
-const DEPRECATED_STR: &str = "Ljava/lang/Deprecated;";
+const DEPRECATED_STR: &str = "Deprecated";
 const RUNTIMEVISIBLEANNOTATIONS_STR: &str = "RuntimeVisibleAnnotations";
 const RUNTIMEINVISIBLEANNOTATIONS_STR: &str = "RuntimeInvisibleAnnotations";
 const RUNTIMEVISIBLEPARAMETERANNOTATIONS_STR: &str = "RuntimeVisibleParameterAnnotations";
 const RUNTIMEINVISIBLEPARAMETERANNOTATIONS_STR: &str = "RuntimeInvisibleParameterAnnotations";
 const ANNOTATIONDEFAULT_STR: &str = "AnnotationsDefault";
 const BOOTSTRAPMETHODS_STR: &str = "BootstrapMethods";
+
 
 #[derive(Debug, Clone)]
 pub struct Attribute {
@@ -254,7 +291,7 @@ pub struct AttributeCode {
     exception_table_length: u16,
     exception_table: Vec<ExceptionTableEntry>,
     attributes_count: u16,
-    attributes_info: Vec<Attribute>,
+    attribute_info: Vec<AttributeType>,
 }
 
 #[derive(Debug, Clone)]

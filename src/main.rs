@@ -2,7 +2,7 @@ mod classfile;
 
 use std::{collections::HashMap, fs::File, io::{BufRead, BufReader, Read}, str};
 use byteorder::{BigEndian, ReadBytesExt};
-use crate::classfile::constant_pool::*;
+use crate::classfile::{attributes::generate_attributes, constant_pool::*, methods::{generate_methods, Method}};
 use crate::classfile::fields::*;
 
 
@@ -39,6 +39,11 @@ fn main() {
     }
 
     let fields = generate_fields(&constant_pool, &mut reader);
+
+    let methods: Vec<Method> = generate_methods(&constant_pool, &mut reader);
+
+    // let attributes_count: u16 = reader.read_u16::<BigEndian>().unwrap();
+    // generate_attributes(attributes_count, &constant_pool, &mut reader);
 
 }
 
