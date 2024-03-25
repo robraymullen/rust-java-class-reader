@@ -1,4 +1,3 @@
-
 #[derive(Debug, Clone)]
 pub struct Annotation {
     pub type_index: u16,
@@ -15,7 +14,7 @@ pub struct ElementValuePair {
 #[derive(Debug, Clone)]
 pub struct ElementValue {
     pub tag: u8,
-    pub value: ElementValueEnum
+    pub value: ElementValueEnum,
 }
 
 #[derive(Debug, Clone)]
