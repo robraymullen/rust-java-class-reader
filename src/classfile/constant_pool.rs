@@ -1,8 +1,7 @@
 use byteorder::{BigEndian, ReadBytesExt};
 use std::{
-    collections::HashMap,
     fs::File,
-    io::{BufRead, BufReader, Read},
+    io::BufReader,
     str,
 };
 

@@ -1,9 +1,8 @@
 use crate::{classfile::BYTE_LENGTH_UNAVAILABLE_ERROR, Constant};
 use byteorder::{BigEndian, ReadBytesExt};
 use std::{
-    collections::HashMap,
     fs::File,
-    io::{BufRead, BufReader, Read},
+    io::{BufReader, Read},
     str,
 };
 
