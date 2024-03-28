@@ -8,6 +8,8 @@ pub mod constant_pool;
 pub mod fields;
 pub mod methods;
 
+pub const BYTE_LENGTH_UNAVAILABLE_ERROR: &str = "Could not allocate the required bytes from the class file";
+
 #[derive(Debug, Clone)]
 pub struct ClassFile {
     pub magic: u32,

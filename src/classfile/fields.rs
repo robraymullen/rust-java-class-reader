@@ -1,4 +1,4 @@
-use crate::{classfile::attributes::*, Constant};
+use crate::{classfile::{attributes::*, BYTE_LENGTH_UNAVAILABLE_ERROR}, Constant};
 use byteorder::{BigEndian, ReadBytesExt};
 use std::{
     collections::HashMap,
@@ -31,19 +31,19 @@ pub fn generate_fields(
     constant_pool: &Vec<Option<Constant>>,
     reader: &mut BufReader<File>,
 ) -> Vec<FieldInfo> {
-    // let fields_count: u16 = reader.read_u16::<BigEndian>().unwrap();
+    // let fields_count: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
     let mut fields: Vec<FieldInfo> = vec![];
     for _ in 0..fields_count {
-        let access_flags: u16 = reader.read_u16::<BigEndian>().unwrap();
-        let name_index: u16 = reader.read_u16::<BigEndian>().unwrap();
+        let access_flags: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
+        let name_index: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
         let constant_name = constant_pool
             .get(name_index as usize)
-            .unwrap()
+            .expect(BYTE_LENGTH_UNAVAILABLE_ERROR)
             .as_ref()
-            .unwrap();
+            .expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
         println!("constant name for field: {:?}", constant_name);
-        let descriptor_index: u16 = reader.read_u16::<BigEndian>().unwrap();
-        let attributes_count: u16 = reader.read_u16::<BigEndian>().unwrap();
+        let descriptor_index: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
+        let attributes_count: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
         println!("Generating attributes for field, count is: {attributes_count}");
         let attributes: Vec<AttributeType> =
             generate_attributes(attributes_count, constant_pool, reader);

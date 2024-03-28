@@ -1,4 +1,4 @@
-use crate::Constant;
+use crate::{classfile::BYTE_LENGTH_UNAVAILABLE_ERROR, Constant};
 use byteorder::{BigEndian, ReadBytesExt};
 use std::{
     collections::HashMap,
@@ -20,13 +20,13 @@ pub fn generate_attributes(
     let mut attributes: Vec<AttributeType> = vec![];
 
     for attribute_index in 0..attribute_count {
-        let attribute_name_index: usize = reader.read_u16::<BigEndian>().unwrap().into();
-        let attribute_length: u32 = reader.read_u32::<BigEndian>().unwrap();
+        let attribute_name_index: usize = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR).into();
+        let attribute_length: u32 = reader.read_u32::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
         let attribute_constant_entry = constant_pool
             .get(attribute_name_index - 1)
-            .unwrap()
+            .expect(BYTE_LENGTH_UNAVAILABLE_ERROR)
             .as_ref()
-            .unwrap();
+            .expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
         println!(
             "attribute_index: {attribute_index}, attribute length: {:?}, attribute_count: {:?}",
             attribute_length, attribute_count
@@ -38,7 +38,7 @@ pub fn generate_attributes(
                 println!("attribute name as string: {:?}", utf8_constant.utf_str);
                 match utf8_constant.utf_str.as_str() {
                     CONSTANT_VALUE_STR => {
-                        let constantvalue_index: u16 = reader.read_u16::<BigEndian>().unwrap();
+                        let constantvalue_index: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                         let constant_value_attribute = AttributeConstantValue {
                             attribute_length,
                             attribute_name_index,
@@ -47,23 +47,23 @@ pub fn generate_attributes(
                         attributes.push(AttributeType::ConstantValue(constant_value_attribute));
                     }
                     CODE_STR => {
-                        let max_stack: u16 = reader.read_u16::<BigEndian>().unwrap();
-                        let max_locals: u16 = reader.read_u16::<BigEndian>().unwrap();
-                        let code_length: u32 = reader.read_u32::<BigEndian>().unwrap();
+                        let max_stack: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
+                        let max_locals: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
+                        let code_length: u32 = reader.read_u32::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
 
                         let mut code: Vec<u8> = vec![];
                         for _ in 0..code_length {
-                            code.push(reader.read_u8().unwrap());
+                            code.push(reader.read_u8().expect(BYTE_LENGTH_UNAVAILABLE_ERROR));
                         }
                         println!("code attribute inner code: {:?}", code);
 
-                        let exception_table_length: u16 = reader.read_u16::<BigEndian>().unwrap();
+                        let exception_table_length: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                         let mut exception_table: Vec<ExceptionTableEntry> = vec![];
                         for _ in 0..exception_table_length {
-                            let start_pc: u16 = reader.read_u16::<BigEndian>().unwrap();
-                            let end_pc: u16 = reader.read_u16::<BigEndian>().unwrap();
-                            let handler_pc: u16 = reader.read_u16::<BigEndian>().unwrap();
-                            let catch_type: u16 = reader.read_u16::<BigEndian>().unwrap();
+                            let start_pc: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
+                            let end_pc: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
+                            let handler_pc: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
+                            let catch_type: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                             let exception: ExceptionTableEntry = ExceptionTableEntry {
                                 start_pc,
                                 end_pc,
@@ -72,7 +72,7 @@ pub fn generate_attributes(
                             };
                             exception_table.push(exception);
                         }
-                        let attributes_count: u16 = reader.read_u16::<BigEndian>().unwrap();
+                        let attributes_count: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                         let attribute_info =
                             generate_attributes(attribute_count, constant_pool, reader);
                         let code = AttributeCode {
@@ -98,13 +98,13 @@ pub fn generate_attributes(
                         println!("match exceptions attribute string");
                     }
                     INNERCLASSES_STR => {
-                        let number_of_classes: u16 = reader.read_u16::<BigEndian>().unwrap();
+                        let number_of_classes: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                         let mut classes: Vec<InnerClass> = vec![];
                         for _ in 0..number_of_classes {
-                            let inner_class_info_index: u16 = reader.read_u16::<BigEndian>().unwrap();
-                            let outer_class_info_index: u16 = reader.read_u16::<BigEndian>().unwrap();
-                            let inner_name_index: u16 = reader.read_u16::<BigEndian>().unwrap();
-                            let inner_class_access_flags: u16 = reader.read_u16::<BigEndian>().unwrap();
+                            let inner_class_info_index: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
+                            let outer_class_info_index: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
+                            let inner_name_index: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
+                            let inner_class_access_flags: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                             let inner_class: InnerClass = InnerClass{inner_class_info_index, outer_class_info_index, inner_name_index, inner_class_access_flags};
                             classes.push(inner_class);
                         }
@@ -117,7 +117,7 @@ pub fn generate_attributes(
                     }
                     SYNTHETIC_STR => {
                         println!("attribute index: {:?}", attribute_index);
-                        let attribute_length: u32 = reader.read_u32::<BigEndian>().unwrap(); //this should be a fixed value of 0
+                        let attribute_length: u32 = reader.read_u32::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR); //this should be a fixed value of 0
                         let synthetic_attribute = AttributeSynthetic {
                             attribute_name_index,
                             attribute_length,
@@ -126,7 +126,7 @@ pub fn generate_attributes(
                     }
                     SIGNATURE_STR => {
                         println!("attribute index: {:?}", attribute_index);
-                        let signature_index: u16 = reader.read_u16::<BigEndian>().unwrap();
+                        let signature_index: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                         let signature_attribute: AttributeSignature = AttributeSignature {
                             attribute_name_index,
                             attribute_length,
@@ -135,7 +135,7 @@ pub fn generate_attributes(
                         attributes.push(AttributeType::Signature(signature_attribute));
                     }
                     SOURCEFILE_STR => {
-                        let sourcefile_index: u16 = reader.read_u16::<BigEndian>().unwrap();
+                        let sourcefile_index: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                         let sourcefile_attr: AttributeSourceFile = AttributeSourceFile{attribute_name_index, attribute_length, sourcefile_index};
                         attributes.push(AttributeType::SourceFile(sourcefile_attr));
                         println!("match source file string");
@@ -144,11 +144,11 @@ pub fn generate_attributes(
                         println!("match source debug extension string");
                     }
                     LINENUMBERTABLE_STR => {
-                        let line_number_table_length: u16 = reader.read_u16::<BigEndian>().unwrap();
+                        let line_number_table_length: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                         let mut line_number_table: Vec<LineNumberTable_Element> = vec![];
                         for _ in 0..line_number_table_length {
-                            let start_pc: u16 = reader.read_u16::<BigEndian>().unwrap();
-                            let line_number: u16 = reader.read_u16::<BigEndian>().unwrap();
+                            let start_pc: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
+                            let line_number: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                             let entry: LineNumberTable_Element = LineNumberTable_Element {
                                 start_pc,
                                 line_number,
@@ -194,14 +194,14 @@ pub fn generate_attributes(
                     BOOTSTRAPMETHODS_STR => {
                         println!("attribute index: {:?}", attribute_index);
                         println!("match bootstrap methods");
-                        let num_bootstrap_methods: u16 = reader.read_u16::<BigEndian>().unwrap();
+                        let num_bootstrap_methods: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                         let mut bootstrap_methods: Vec<BootstrapMethodElement> = vec![];
                         for _ in 0..num_bootstrap_methods {
-                            let bootstrap_method_ref: u16 = reader.read_u16::<BigEndian>().unwrap();
-                            let num_bootstrap_arguments: u16 = reader.read_u16::<BigEndian>().unwrap();
+                            let bootstrap_method_ref: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
+                            let num_bootstrap_arguments: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                             let mut bootstrap_arguments: Vec<u16> = vec![];
                             for _ in 0..num_bootstrap_arguments {
-                                let argument = reader.read_u16::<BigEndian>().unwrap();
+                                let argument = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                                 bootstrap_arguments.push(argument);
                             }
                             let method: BootstrapMethodElement = BootstrapMethodElement{bootstrap_method_ref, num_bootstrap_arguments, bootstrap_arguments};
@@ -214,9 +214,9 @@ pub fn generate_attributes(
                         println!("attribute index: {:?}", attribute_index);
                         let name = constant_pool
                             .get(attribute_index as usize)
-                            .unwrap()
+                            .expect(BYTE_LENGTH_UNAVAILABLE_ERROR)
                             .as_ref()
-                            .unwrap();
+                            .expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
 
                         if attribute_length > 0 {
                             println!(
@@ -224,25 +224,25 @@ pub fn generate_attributes(
                                 name
                             );
 
-                            let num_annotations: u16 = reader.read_u16::<BigEndian>().unwrap();
+                            let num_annotations: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                             let mut annotations: Vec<Annotation> = vec![];
                             for _ in 0..num_annotations {
-                                let type_index: u16 = reader.read_u16::<BigEndian>().unwrap();
+                                let type_index: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                                 let num_element_value_pairs: u16 =
-                                    reader.read_u16::<BigEndian>().unwrap();
+                                    reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
 
                                 let mut element_value_pairs: Vec<ElementValuePair> = vec![];
                                 println!("num_element_value_pairs: {num_element_value_pairs}");
                                 for _ in 0..num_element_value_pairs {
                                     let element_name_index: u16 =
-                                        reader.read_u16::<BigEndian>().unwrap();
+                                        reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                                     let name = constant_pool
                                         .get(element_name_index as usize)
-                                        .unwrap()
+                                        .expect(BYTE_LENGTH_UNAVAILABLE_ERROR)
                                         .as_ref()
-                                        .unwrap();
+                                        .expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                                     println!("name at element_name_index: {element_name_index}, is: {:?}", name);
-                                    let tag: u8 = reader.read_u8().unwrap();
+                                    let tag: u8 = reader.read_u8().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                                     println!("tag found: {:?}", tag);
                                     let tag_char = tag as char;
 
@@ -251,7 +251,7 @@ pub fn generate_attributes(
                                     let value: ElementValue = match tag_char {
                                         's' | 'B' | 'C' | 'D' | 'F' | 'I' | 'J' | 'S' | 'Z' => {
                                             let const_value_index: u16 =
-                                                reader.read_u16::<BigEndian>().unwrap();
+                                                reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                                             let constant_value: ConstValueElement =
                                                 ConstValueElement { const_value_index };
                                             ElementValue {
@@ -263,9 +263,9 @@ pub fn generate_attributes(
                                         }
                                         'e' => {
                                             let type_name_index: u16 =
-                                                reader.read_u16::<BigEndian>().unwrap();
+                                                reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                                             let const_name_index: u16 =
-                                                reader.read_u16::<BigEndian>().unwrap();
+                                                reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                                             let enum_const_value: EnumConstValueElement =
                                                 EnumConstValueElement {
                                                     type_name_index,
@@ -280,7 +280,7 @@ pub fn generate_attributes(
                                         }
                                         'c' => {
                                             let class_info_index: u16 =
-                                                reader.read_u16::<BigEndian>().unwrap();
+                                                reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                                             let class_const =
                                                 ClassInfoIndexElement { class_info_index };
                                             ElementValue {

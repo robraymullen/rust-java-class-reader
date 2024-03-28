@@ -6,6 +6,8 @@ use std::{
     str,
 };
 
+use crate::classfile::BYTE_LENGTH_UNAVAILABLE_ERROR;
+
 pub fn generate_constant_pool(
     reader: &mut BufReader<File>,
     constant_pool_size: usize,
@@ -22,19 +24,19 @@ pub fn generate_constant_pool(
         constant_pool_size + 1
     );
     for index in 1..constant_pool_size {
-        let tag: u8 = reader.read_u8().unwrap();
+        let tag: u8 = reader.read_u8().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
 
         match tag {
             CONSTANT_POOL_CLASS => {
-                let name_index: u16 = reader.read_u16::<BigEndian>().unwrap();
+                let name_index: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                 let class = ConstantClass { tag, name_index };
                 println!("index: {index}, class: {:?}", class);
                 constant_pool[index] = Some(Constant::Class(class));
                 println!("Class name index: {name_index}");
             }
             CONSTANT_POOL_FIELDREF | CONSTANT_POOL_METHODREF | CONSTANT_POOL_INTERFACEMETHODREF => {
-                let class_index: u16 = reader.read_u16::<BigEndian>().unwrap();
-                let name_and_type_index: u16 = reader.read_u16::<BigEndian>().unwrap();
+                let class_index: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
+                let name_and_type_index: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                 let constant_ref = ConstantRef {
                     tag,
                     class_index,
@@ -44,26 +46,26 @@ pub fn generate_constant_pool(
                 println!("Class index: {class_index}, name and type index: {name_and_type_index}");
             }
             CONSTANT_POOL_STRING => {
-                let string_index: u16 = reader.read_u16::<BigEndian>().unwrap();
+                let string_index: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                 let string = ConstantStringInfo { tag, string_index };
                 constant_pool[index] = Some(Constant::String(string));
                 println!("string index: {string_index}");
             }
             CONSTANT_POOL_INTEGER => {
-                let bytes: u32 = reader.read_u32::<BigEndian>().unwrap();
+                let bytes: u32 = reader.read_u32::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                 let integer = ConstantInteger { tag, bytes };
                 constant_pool[index] = Some(Constant::Integer(integer));
                 println!("integer bytes: {bytes}");
             }
             CONSTANT_POOL_FLOAT => {
-                let bytes: u32 = reader.read_u32::<BigEndian>().unwrap();
+                let bytes: u32 = reader.read_u32::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                 let float = ConstantFloat { tag, bytes };
                 constant_pool[index] = Some(Constant::Float(float));
                 println!("float bytes: {bytes}");
             }
             CONSTANT_POOL_LONG => {
-                let high_bytes: u32 = reader.read_u32::<BigEndian>().unwrap();
-                let low_bytes: u32 = reader.read_u32::<BigEndian>().unwrap();
+                let high_bytes: u32 = reader.read_u32::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
+                let low_bytes: u32 = reader.read_u32::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                 let long = ConstantLong {
                     tag,
                     high_bytes,
@@ -73,8 +75,8 @@ pub fn generate_constant_pool(
                 println!("long high bytes: {high_bytes}, long low bytes: {low_bytes}");
             }
             CONSTANT_POOL_DOUBLE => {
-                let high_bytes: u32 = reader.read_u32::<BigEndian>().unwrap();
-                let low_bytes: u32 = reader.read_u32::<BigEndian>().unwrap();
+                let high_bytes: u32 = reader.read_u32::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
+                let low_bytes: u32 = reader.read_u32::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                 let double = ConstantDouble {
                     tag,
                     high_bytes,
@@ -84,8 +86,8 @@ pub fn generate_constant_pool(
                 println!("double high bytes: {high_bytes}");
             }
             CONSTANT_POOL_NAME_AND_TYPE => {
-                let name_index: u16 = reader.read_u16::<BigEndian>().unwrap();
-                let descriptor_index: u16 = reader.read_u16::<BigEndian>().unwrap();
+                let name_index: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
+                let descriptor_index: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                 let name_and_type = ConstantNameAndType {
                     tag,
                     name_index,
@@ -97,12 +99,12 @@ pub fn generate_constant_pool(
                 );
             }
             CONSTANT_POOL_UTF8 => {
-                let length = reader.read_u16::<BigEndian>().unwrap();
+                let length = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                 let mut bytes: Vec<u8> = vec![];
                 for _ in 0..length {
-                    bytes.push(reader.read_u8().unwrap());
+                    bytes.push(reader.read_u8().expect(BYTE_LENGTH_UNAVAILABLE_ERROR));
                 }
-                let utf_str: String = str::from_utf8(&bytes).unwrap().into();
+                let utf_str: String = str::from_utf8(&bytes).expect(BYTE_LENGTH_UNAVAILABLE_ERROR).into();
                 let utf8 = ConstantUtf8Info {
                     tag,
                     utf_str: utf_str.clone(),
@@ -111,8 +113,8 @@ pub fn generate_constant_pool(
                 println!("utf8 string: {utf_str}, length: {length}");
             }
             CONSTANT_POOL_METHOD_HANDLE => {
-                let reference_kind: u8 = reader.read_u8().unwrap();
-                let reference_index: u16 = reader.read_u16::<BigEndian>().unwrap();
+                let reference_kind: u8 = reader.read_u8().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
+                let reference_index: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                 let method_handle = ConstantMethodHandle {
                     tag,
                     reference_index,
@@ -122,7 +124,7 @@ pub fn generate_constant_pool(
                 println!("method handle. reference kind: {reference_kind}, reference index: {reference_index}");
             }
             CONSTANT_POOL_METHOD_TYPE => {
-                let descriptor_index: u16 = reader.read_u16::<BigEndian>().unwrap();
+                let descriptor_index: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                 let method_type = ConstantMethodType {
                     tag,
                     descriptor_index,
@@ -131,8 +133,8 @@ pub fn generate_constant_pool(
                 println!("method type. descriptor index: {descriptor_index}");
             }
             CONSTANT_POOL_INVOKE_DYNAMIC => {
-                let bootstrap_method_attr_index: u16 = reader.read_u16::<BigEndian>().unwrap();
-                let name_and_type_index: u16 = reader.read_u16::<BigEndian>().unwrap();
+                let bootstrap_method_attr_index: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
+                let name_and_type_index: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
                 let invoke_dynamic = ConstantInvokeDynamic {
                     tag,
                     bootstrap_method_attr_index,
