@@ -1,5 +1,6 @@
 mod classfile;
 
+use crate::classfile::interfaces::generate_interfaces;
 use crate::classfile::{fields::*, ClassFile, BYTE_LENGTH_UNAVAILABLE_ERROR};
 use crate::classfile::{
     attributes::generate_attributes,
@@ -78,15 +79,4 @@ fn main() {
     println!("class file \n: {:?}", class_file);
 }
 
-fn generate_interfaces(interfaces_count: u16, reader: &mut BufReader<File>) -> Vec<u16> {
-    let mut interfaces: Vec<u16> = vec![];
-    for _ in 0..interfaces_count {
-        interfaces.push(reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR));
-    }
-    println!(
-        "interface count: {interfaces_count}, interfaces: {:?}",
-        interfaces
-    );
-    interfaces
-}
 

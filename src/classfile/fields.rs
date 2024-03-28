@@ -1,10 +1,8 @@
 use crate::{classfile::{attributes::*, BYTE_LENGTH_UNAVAILABLE_ERROR}, Constant};
 use byteorder::{BigEndian, ReadBytesExt};
 use std::{
-    collections::HashMap,
     fs::File,
-    io::{BufRead, BufReader, Read},
-    str,
+    io::{BufReader},
 };
 
 const ACC_PUBLIC: u16 = 0x0001;
