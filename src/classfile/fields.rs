@@ -1,9 +1,6 @@
-use crate::{classfile::{attributes::*, BYTE_LENGTH_UNAVAILABLE_ERROR}, Constant};
+use crate::classfile::{attributes::*, constant_pool::Constant, BYTE_LENGTH_UNAVAILABLE_ERROR};
 use byteorder::{BigEndian, ReadBytesExt};
-use std::{
-    fs::File,
-    io::{BufReader},
-};
+use std::{fs::File, io::BufReader};
 
 const ACC_PUBLIC: u16 = 0x0001;
 const ACC_PRIVATE: u16 = 0x0002;
@@ -32,16 +29,24 @@ pub fn generate_fields(
     // let fields_count: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
     let mut fields: Vec<FieldInfo> = vec![];
     for _ in 0..fields_count {
-        let access_flags: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
-        let name_index: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
+        let access_flags: u16 = reader
+            .read_u16::<BigEndian>()
+            .expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
+        let name_index: u16 = reader
+            .read_u16::<BigEndian>()
+            .expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
         let constant_name = constant_pool
             .get(name_index as usize)
             .expect(BYTE_LENGTH_UNAVAILABLE_ERROR)
             .as_ref()
             .expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
         println!("constant name for field: {:?}", constant_name);
-        let descriptor_index: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
-        let attributes_count: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
+        let descriptor_index: u16 = reader
+            .read_u16::<BigEndian>()
+            .expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
+        let attributes_count: u16 = reader
+            .read_u16::<BigEndian>()
+            .expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
         println!("Generating attributes for field, count is: {attributes_count}");
         let attributes: Vec<AttributeType> =
             generate_attributes(attributes_count, constant_pool, reader);
