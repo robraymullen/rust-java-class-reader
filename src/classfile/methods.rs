@@ -1,4 +1,4 @@
-use crate::{classfile::{attributes::*, BYTE_LENGTH_UNAVAILABLE_ERROR}, Constant};
+use crate::classfile::{attributes::*, BYTE_LENGTH_UNAVAILABLE_ERROR, constant_pool::Constant};
 use byteorder::{BigEndian, ReadBytesExt};
 use std::{
     collections::HashMap,
@@ -18,10 +18,18 @@ pub fn generate_methods(
     println!("methods count: {methods_count}");
 
     for _ in 0..methods_count {
-        let access_flags: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
-        let name_index: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
-        let descriptor_index: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
-        let attributes_count: u16 = reader.read_u16::<BigEndian>().expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
+        let access_flags: u16 = reader
+            .read_u16::<BigEndian>()
+            .expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
+        let name_index: u16 = reader
+            .read_u16::<BigEndian>()
+            .expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
+        let descriptor_index: u16 = reader
+            .read_u16::<BigEndian>()
+            .expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
+        let attributes_count: u16 = reader
+            .read_u16::<BigEndian>()
+            .expect(BYTE_LENGTH_UNAVAILABLE_ERROR);
 
         println!("method attributes count: {attributes_count}");
         let attributes = generate_attributes(attributes_count, constant_pool, reader);
